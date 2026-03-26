@@ -1,0 +1,3 @@
+v 3
+d Stata packages by Bladimir Carrillo
+p mystacked_blad Build a stacked matched sample using Mahalanobis distance

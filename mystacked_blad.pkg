@@ -1,0 +1,8 @@
+d 'mystacked_blad': Build a stacked matched sample using Mahalanobis distance
+d
+d Distribution-Date: 20260326
+d Author: Bladimir Carrillo
+d Support: blacaber8@hotmail.com
+d
+f mystacked_blad.ado
+f mystacked_blad.sthlp
