@@ -25,7 +25,8 @@
 {cmd:id(}{it:varname}{cmd:)}
 [{cmd:force}
 {cmd:path_actual}
-{cmd:by(}{it:varlist}{cmd:)}]
+{cmd:by(}{it:varlist}{cmd:)}
+{cmd:seed(}{it:#}{cmd:)}]
 
 {marker description}{...}
 {title:Description}
@@ -65,6 +66,9 @@ For example, with {cmd:by(region sex)}, a treated unit is matched only to contro
 {phang}
 {cmd:by(}{it:varlist}{cmd:)} restricts matching to occur only within groups defined by the variables in {cmd:by()}.
 
+{phang}
+{cmd:seed(}{it:#}{cmd:)} sets the random seed used to break ties when two or more control units have the same Mahalanobis distance for a given treated unit and event.
+
 {title:Remarks}
 
 {pstd}
@@ -80,6 +84,9 @@ If {cmd:by()} is specified, treated units are matched only to controls within th
 If {cmd:path_actual} is specified, files are written to the current working directory instead of Stata's temporary directory.
 
 {pstd}
+If {cmd:seed()} is specified, tie-breaking becomes reproducible across runs.
+
+{pstd}
 The command stops if the covariance matrix of the variables in {cmd:xvar()} is singular.
 
 {marker examples}{...}
@@ -90,6 +97,8 @@ The command stops if the covariance matrix of the variables in {cmd:xvar()} is s
 {phang2}{cmd:. mystacked_blad, rperiod(1) event(event) xvar(x1 x2) time(time) id(id) by(region sex)}
 
 {phang2}{cmd:. mystacked_blad, rperiod(1) event(event) xvar(x1 x2) time(time) id(id) path_actual}
+
+{phang2}{cmd:. mystacked_blad, rperiod(1) event(event) xvar(x1 x2) time(time) id(id) seed(123)}
 
 {phang2}{cmd:. mystacked_blad if sample==1, rperiod(2) event(event) xvar(age income) time(year) id(firm_id) force}
 
