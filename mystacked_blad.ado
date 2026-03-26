@@ -27,7 +27,7 @@ program mystacked_blad, eclass
 
 syntax    [if] [in] , ///
 		  rperiod(integer) event(varname numeric)  xvar(varlist) time(varname numeric) id(varname)  ///
-		  [ force    path_actual  by(varlist)  ] 
+		  [ force    path_actual  by(varlist)  seed(numlist integer max=1) ] 
 		 
 
 quietly {
@@ -119,7 +119,7 @@ use "`tempdir'\\baseline_sample.dta", clear
 keep if `event'>0 
 keep `id' `event' `by'
 ren `id' `id'1
-bysort `id'1 : keep if _n==1 
+bysort `id'1 `event': keep if _n==1 
 
 gen ID=1 
 
@@ -165,9 +165,15 @@ foreach v in `xvar' {
 gen double maha = .
 mata: st_store(., "maha", mahal_dist(st_local("dlist"), "Sinv"))
 
+if "`seed'"!="" {
+	set seed `seed'
+	gen random=runiform()
+	local random "random"
+}
+
 * nearest neighbor 
-sort `id'1 maha  
-by `id'1: keep if _n==1 
+sort `id'1 `event' maha  `random'
+by `id'1 `event': keep if _n==1 
 
 keep `id'* `event' 
 gen match_pair=_n 
@@ -268,6 +274,6 @@ list, sepby(id)
 
 ren x1 x 
 ren x2 z 
-mystacked_blad, rperiod(1) event(event) xvar(x z ) time(time) id(id)
+mystacked_blad, rperiod(1) event(event) xvar(x z ) time(time) id(id)  seed(123)
 
 */
