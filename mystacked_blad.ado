@@ -171,6 +171,11 @@ if "`seed'"!="" {
 	local random "random"
 }
 
+count if maha==. 
+if r(N)>0 {
+	dis as red "Maha score has missing values"
+}
+
 * nearest neighbor 
 sort `id'1 `event' maha  `random'
 by `id'1 `event': keep if _n==1 
