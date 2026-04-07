@@ -133,7 +133,7 @@ drop ID
 foreach i in 1 0 {
 ren `id'`i' `id'    
 
-merge m:1 `id' `time'  using "`tempdir'\\baseline_sample.dta", keep(3) keepusing(`xvar') nogen 
+merge m:1 `id' `time' `event' using "`tempdir'\\baseline_sample.dta", keep(3) keepusing(`xvar') nogen 
 
 foreach j in  `xvar' {
 ren `j' `j'`i'    
