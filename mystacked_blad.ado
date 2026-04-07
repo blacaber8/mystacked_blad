@@ -55,8 +55,8 @@ local by "_FS"
 
 display "Temporary files will be stored in: `tempdir'"
 tempvar tag_t tag_c nt nc prod gtag
-egen `tag_t' = tag(`by' `id') if `event' > 0
-egen `tag_c' = tag(`by' `id') if `event' == 0
+egen `tag_t' = tag(`by' `id' `event') if `event' > 0
+egen `tag_c' = tag(`by' `id' `event') if `event' == 0
 
 bysort `by': egen `nt' = total(`tag_t')
 bysort `by': egen `nc' = total(`tag_c')
@@ -77,7 +77,7 @@ if `c' > 50000000 &  "`force'" == "" {
     exit 198
 }
 
-capture isid `id' `time'
+capture isid `id' `time' `event'
 if _rc>0 {
     di as err "The data are not uniquely identified by id and time."
     di as err "There are multiple observations within at least one id-time cell."
@@ -203,82 +203,3 @@ erase "`tempdir'\\final_stacked_matched.dta"
 describe *
 
 end 
-
-/*
-clear
-set obs 20
-
-* 5 unidades, 4 periodos cada = 20 observacoes
-gen id = ceil(_n/4)
-bysort id: gen time = _n
-
-* Evento: ids 1 e 2 tratados; ids 3, 4 e 5 controles
-gen event = .
-replace event = 3 if id == 1
-replace event = 2 if id == 2
-replace event = 0 if inlist(id, 3, 4, 5)
-
-* Covariaveis observadas ao longo do tempo
-gen x1 = .
-gen x2 = .
-
-replace x1 = 10 if id == 1 & time == 1
-replace x1 = 12 if id == 1 & time == 2
-replace x1 = 14 if id == 1 & time == 3
-replace x1 = 15 if id == 1 & time == 4
-
-replace x1 = 20 if id == 2 & time == 1
-replace x1 = 21 if id == 2 & time == 2
-replace x1 = 23 if id == 2 & time == 3
-replace x1 = 24 if id == 2 & time == 4
-
-replace x1 = 11 if id == 3 & time == 1
-replace x1 = 13 if id == 3 & time == 2
-replace x1 = 15 if id == 3 & time == 3
-replace x1 = 16 if id == 3 & time == 4
-
-replace x1 = 19 if id == 4 & time == 1
-replace x1 = 20 if id == 4 & time == 2
-replace x1 = 22 if id == 4 & time == 3
-replace x1 = 23 if id == 4 & time == 4
-
-replace x1 = 30 if id == 5 & time == 1
-replace x1 = 31 if id == 5 & time == 2
-replace x1 = 32 if id == 5 & time == 3
-replace x1 = 33 if id == 5 & time == 4
-
-replace x2 = 100 if id == 1 & time == 1
-replace x2 = 102 if id == 1 & time == 2
-replace x2 = 104 if id == 1 & time == 3
-replace x2 = 106 if id == 1 & time == 4
-
-replace x2 = 200 if id == 2 & time == 1
-replace x2 = 201 if id == 2 & time == 2
-replace x2 = 203 if id == 2 & time == 3
-replace x2 = 205 if id == 2 & time == 4
-
-replace x2 = 101 if id == 3 & time == 1
-replace x2 = 103 if id == 3 & time == 2
-replace x2 = 105 if id == 3 & time == 3
-replace x2 = 107 if id == 3 & time == 4
-
-replace x2 = 198 if id == 4 & time == 1
-replace x2 = 200 if id == 4 & time == 2
-replace x2 = 202 if id == 4 & time == 3
-replace x2 = 204 if id == 4 & time == 4
-
-replace x2 = 300 if id == 5 & time == 1
-replace x2 = 301 if id == 5 & time == 2
-replace x2 = 302 if id == 5 & time == 3
-replace x2 = 303 if id == 5 & time == 4
-
-order id time event x1 x2
-sort id time
-list, sepby(id)
-
-
-ren x1 x 
-ren x2 z 
-mystacked_blad, rperiod(1) event(event) xvar(x z ) time(time) id(id)  seed(123)
-
-*/
