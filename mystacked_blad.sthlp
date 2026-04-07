@@ -32,7 +32,7 @@
 {title:Description}
 
 {pstd}
-{cmd:mystacked_blad} constructs a stacked matched sample from panel data organized at the {it:id} x {it:time} level.
+{cmd:mystacked_blad} constructs a stacked matched sample from panel data organized at the {it:id} x {it:time} x {it:event} level.
 For each treated unit, the command finds the nearest control using Mahalanobis distance computed from the variables supplied in {cmd:xvar()} and measured in period {cmd:event-rperiod}.
 
 {pstd}
@@ -72,7 +72,7 @@ For example, with {cmd:by(region sex)}, a treated unit is matched only to contro
 {title:Remarks}
 
 {pstd}
-The data must be uniquely identified by {cmd:id} and {cmd:time}. In other words, the dataset must be at the {it:id} x {it:time} level.
+The data must be uniquely identified by {cmd:id}, {cmd:time} and {cmd:event}. In other words, the dataset must be at the {it:id} x {it:time} x {it:event} level.
 
 {pstd}
 Matching is one-to-one and is performed with replacement.
@@ -85,9 +85,6 @@ If {cmd:path_actual} is specified, files are written to the current working dire
 
 {pstd}
 If {cmd:seed()} is specified, tie-breaking becomes reproducible across runs.
-
-{pstd}
-The command stops if the covariance matrix of the variables in {cmd:xvar()} is singular.
 
 {marker examples}{...}
 {title:Examples}
