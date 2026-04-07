@@ -129,11 +129,24 @@ erase  "`tempdir'\\control_group.dta"
 gen `time'=`event'-`rperiod'
 drop ID 
 
+
+
 * Merging covariates 
 foreach i in 1 0 {
 ren `id'`i' `id'    
 
+if "`i'"=="0" {
+	ren `event' _X
+	gen `event'=0
+}
+
 merge m:1 `id' `time' `event' using "`tempdir'\\baseline_sample.dta", keep(3) keepusing(`xvar') nogen 
+
+
+if "`i'"=="0" {
+	drop `event'
+	ren _X `event' 
+}
 
 foreach j in  `xvar' {
 ren `j' `j'`i'    
@@ -141,6 +154,7 @@ ren `j' `j'`i'
 
 ren `id' `id'`i'      
 }
+
 
 /*
 * computing Euclidian distance 
