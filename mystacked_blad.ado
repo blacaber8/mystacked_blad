@@ -109,7 +109,7 @@ use "`tempdir'\\baseline_sample.dta", clear
 keep if `event'==0 
 
 keep `id' `by'
-bysort `id': keep if _n==1 
+bysort `id' `by': keep if _n==1 
 ren `id' `id'0 
 gen ID=1 
 saveold "`tempdir'\\control_group.dta", replace 
@@ -119,7 +119,7 @@ use "`tempdir'\\baseline_sample.dta", clear
 keep if `event'>0 
 keep `id' `event' `by'
 ren `id' `id'1
-bysort `id'1 `event': keep if _n==1 
+bysort `id'1 `event' `by': keep if _n==1 
 
 gen ID=1 
 
@@ -128,8 +128,6 @@ erase  "`tempdir'\\control_group.dta"
 
 gen `time'=`event'-`rperiod'
 drop ID 
-
-
 
 * Merging covariates 
 foreach i in 1 0 {
@@ -181,9 +179,14 @@ mata: st_store(., "maha", mahal_dist(st_local("dlist"), "Sinv"))
 
 if "`seed'"!="" {
 	set seed `seed'
+}
+
+if "`seed'"=="" {
+	set seed 123
+}	
 	gen random=runiform()
 	local random "random"
-}
+
 
 count if maha==. 
 if r(N)>0 {
