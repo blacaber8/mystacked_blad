@@ -173,6 +173,7 @@ drop noyet
 bysort match_pair `id' `event': keep if _n==1
 bysort `id' `event': gen weight=_N 
 bysort `id' `event': keep if _n==1 
+replace weight=1/weight
 
 label var weight "Weight for estimation"
 label var match_pair "New pair id code"
