@@ -27,7 +27,7 @@ program mystacked_blad, eclass
 
 syntax    [if] [in] , ///
 		  rperiod(integer) event(varname numeric)  xvar(varlist) time(varname numeric) id(varname)  ///
-		  [ force    path_actual  by(varlist)  seed(numlist integer max=1) ] 
+		  [ force    path_actual  by(varlist)  seed(numlist integer max=1) noyet(numlist integer max=1) allstack onlynoyet ] 
 		 
 
 quietly {
@@ -104,14 +104,25 @@ if _rc!=0  {
     exit 498
 }
 
-use "`tempdir'\\baseline_sample.dta", clear 
 * Control sample 
-keep if `event'==0 
+use "`tempdir'\\baseline_sample.dta", clear 
 
+if "`noyet'"!="" {
+keep `id' `by' `event'
+bysort `id' `by': keep if _n==1 
+ren `id' `id'0 
+ren `event' `event'0 
+gen ID=1 	
+}
+
+if "`noyet'"=="" {
+keep if `event'==0 
 keep `id' `by'
 bysort `id' `by': keep if _n==1 
 ren `id' `id'0 
 gen ID=1 
+}
+
 saveold "`tempdir'\\control_group.dta", replace 
 
 * Treatment sample 
@@ -126,6 +137,62 @@ gen ID=1
 joinby ID `by' using "`tempdir'\\control_group.dta" 
 erase  "`tempdir'\\control_group.dta" 
 
+if "`noyet'"!="" {
+drop if `id'0 ==`id'1
+keep if `event'0-`event'>=`noyet' | `event'0==0  
+}
+
+* Only full stacked
+if "`allstack'"!="" {
+
+if "`onlynoyet'"!="" {
+gen noyet=`event'0>0
+}
+
+if "`onlynoyet'"=="" {
+gen noyet=1
+}
+	
+keep `id'* `event' noyet
+gen match_pair=_n 
+gen stacked=`id'1
+
+reshape long  `id' , i(match_pair `event' stacked noyet)  j(treated)
+drop match_pair 
+ren stacked match_pair 
+
+if "`onlynoyet'"!="" {
+keep if noyet==1
+drop noyet 
+}
+
+if "`onlynoyet'"=="" {
+drop noyet 
+}
+
+bysort match_pair `id' `event': keep if _n==1
+bysort `id' `event': gen weight=_N 
+bysort `id' `event': keep if _n==1 
+
+label var weight "Weight for estimation"
+label var match_pair "New pair id code"
+label var `id' "original ID" 
+label var `event' "original event" 
+label var treated "New treated/control status"
+
+saveold "`tempdir'\\final_stacked_matched.dta", replace 
+erase "`tempdir'\\baseline_sample.dta" 
+restore  
+
+di as red "Matching completed successfully."
+	
+use "`tempdir'\\final_stacked_matched.dta", clear 
+erase "`tempdir'\\final_stacked_matched.dta" 
+exit
+}	
+
+drop `event'0
+* Matched on covariates 
 gen `time'=`event'-`rperiod'
 drop ID 
 
@@ -152,18 +219,6 @@ ren `j' `j'`i'
 
 ren `id' `id'`i'      
 }
-
-
-/*
-* computing Euclidian distance 
-gen maha=0 
-foreach i in `xvar' {
- bysort `id'1: egen SD=sd(`i'0)
- replace maha=maha+ ((`i'0-`i'1)/SD)^2 
- drop SD 
-}
-replace maha =sqrt(maha)
-*/ 
  
 * Mahalanobis distance 
 local dlist
