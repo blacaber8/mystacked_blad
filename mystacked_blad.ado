@@ -90,6 +90,7 @@ if _rc>0 {
 * Baseline sample 
 saveold  "`tempdir'\\baseline_sample.dta", replace 
 
+/*
 * Matrix for mahalanobis 
 use "`tempdir'/baseline_sample.dta", clear
 keep if `event' == 0
@@ -103,7 +104,7 @@ if _rc!=0  {
 	restore 
     exit 498
 }
-
+*/
 * Control sample 
 use "`tempdir'\\baseline_sample.dta", clear 
 
