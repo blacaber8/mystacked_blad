@@ -99,10 +99,12 @@ if _rc>0 {
 
 **** Execution:  
 
+gen fake=1 
 * Baseline sample 
 saveold  "`tempdir'\\baseline_sample.dta", replace 
 
-/*
+
+if "`allstack'"=="" {
 * Matrix for mahalanobis 
 use "`tempdir'/baseline_sample.dta", clear
 keep if `event' == 0
@@ -116,7 +118,8 @@ if _rc!=0  {
 	restore 
     exit 498
 }
-*/
+}
+
 * Control sample 
 use "`tempdir'\\baseline_sample.dta", clear 
 
@@ -124,11 +127,11 @@ if "`noyet'"!="" {
 keep `id' `by' `event'
 bysort `id' `by': keep if _n==1 
 ren `id' `id'0 
-ren `event' `event'0 
 gen ID=1 	
 	if "`onlynoyet'"!="" {
 		drop if `event'==0 		
 	}
+ren `event' `event'0
 }
 
 if "`noyet'"=="" {
@@ -138,7 +141,7 @@ bysort `id' `by': keep if _n==1
 ren `id' `id'0 
 gen ID=1 
 }
-
+ 
 saveold "`tempdir'\\control_group.dta", replace 
 
 * Treatment sample 
@@ -208,7 +211,10 @@ if "`allstack'"!="" {
 		exit
 }	
 
+if "`noyet'"!="" {
 drop `event'0
+}
+
 * Matched on covariates 
 gen `time'=`event'-`rperiod'
 drop ID 
@@ -218,16 +224,13 @@ foreach i in 1 0 {
 ren `id'`i' `id'    
 
 if "`i'"=="0" {
-	ren `event' _X
-	gen `event'=0
+	gen fake=1 
+    merge m:1 `id' `time' fake using "`tempdir'\\baseline_sample.dta", keep(3) keepusing(`xvar') nogen 
+	drop fake 
 }
 
+if "`i'"=="1" {
 merge m:1 `id' `time' `event' using "`tempdir'\\baseline_sample.dta", keep(3) keepusing(`xvar') nogen 
-
-
-if "`i'"=="0" {
-	drop `event'
-	ren _X `event' 
 }
 
 foreach j in  `xvar' {
@@ -237,6 +240,16 @@ ren `j' `j'`i'
 ren `id' `id'`i'      
 }
  
+ if _N==0 {
+ 	dis as red "No feasible control group"
+	erase "`tempdir'\\baseline_sample.dta"
+	exit 
+ }
+ 
+  if _N>0 {
+ 	dis as red "Feasible control group:" _N 
+	 
+ }
 * Mahalanobis distance 
 local dlist
 local j = 0
@@ -292,3 +305,28 @@ erase "`tempdir'\\final_stacked_matched.dta"
 describe *
 
 end 
+
+/*
+clear
+set seed 123
+
+* 200 unidades, 10 periodos cada
+set obs 200
+gen id = _n
+expand 20
+bysort id: gen time = _n
+
+* 100 tratadas em diferentes momentos; 100 never-treated
+gen event = 0
+replace event = round(runiform(1, 18)) if id <= 100
+
+* Covariavel continua: renda
+gen renda = 1000 + 50*time + 10*id + rnormal(0,100)
+
+order id time event renda
+sort id time
+
+* Exemplo de uso
+mystacked_blad, rperiod(1) event(event) xvar(renda) time(time) id(id) seed(123) noyet(3) onlynoyet
+
+*/
