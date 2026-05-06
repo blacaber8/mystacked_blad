@@ -30,6 +30,7 @@ syntax    [if] [in] , ///
 		  [ force    path_actual  by(varlist)  seed(numlist integer max=1) noyet(numlist integer max=1) allstack onlynoyet ] 
 		 
 
+		 
 quietly {
 preserve 
 marksample touse
@@ -56,7 +57,18 @@ local by "_FS"
 display "Temporary files will be stored in: `tempdir'"
 tempvar tag_t tag_c nt nc prod gtag
 egen `tag_t' = tag(`by' `id' `event') if `event' > 0
+if "`noyet'"!="" & "`onlynoyet'"=="" {
+egen `tag_c' = tag(`by' `id' `event') if `event' >= 0
+}
+
+if "`noyet'"!="" & "`onlynoyet'"!="" {
+egen `tag_c' = tag(`by' `id' `event') if `event' > 0
+}
+
+if "`noyet'"==""  {
 egen `tag_c' = tag(`by' `id' `event') if `event' == 0
+}
+
 
 bysort `by': egen `nt' = total(`tag_t')
 bysort `by': egen `nc' = total(`tag_c')
@@ -114,6 +126,9 @@ bysort `id' `by': keep if _n==1
 ren `id' `id'0 
 ren `event' `event'0 
 gen ID=1 	
+	if "`onlynoyet'"!="" {
+		drop if `event'==0 		
+	}
 }
 
 if "`noyet'"=="" {
@@ -146,51 +161,51 @@ keep if `event'0-`event'>=`noyet' | `event'0==0
 * Only full stacked
 if "`allstack'"!="" {
 
-if "`onlynoyet'"!="" {
-gen noyet=`event'0>0
-}
+		if "`onlynoyet'"!="" {
+		gen noyet=`event'0>0
+		}
 
-if "`onlynoyet'"=="" {
-gen noyet=1
-}
-	
-keep `id'* `event' noyet
-gen match_pair=_n 
-gen stacked=`id'1
+		if "`onlynoyet'"=="" {
+		gen noyet=1
+		}
+			
+		keep `id'* `event' noyet
+		gen match_pair=_n 
+		gen stacked=`id'1
 
-reshape long  `id' , i(match_pair `event' stacked noyet)  j(treated)
-drop match_pair 
-ren stacked match_pair 
+		reshape long  `id' , i(match_pair `event' stacked noyet)  j(treated)
+		drop match_pair 
+		ren stacked match_pair 
 
-if "`onlynoyet'"!="" {
-keep if noyet==1
-drop noyet 
-}
+		if "`onlynoyet'"!="" {
+		keep if noyet==1
+		drop noyet 
+		}
 
-if "`onlynoyet'"=="" {
-drop noyet 
-}
+		if "`onlynoyet'"=="" {
+		drop noyet 
+		}
 
-bysort match_pair `id' `event': keep if _n==1
-bysort `id' `event': gen weight=_N 
-bysort `id' `event': keep if _n==1 
-replace weight=1/weight
+		bysort match_pair `id' `event': keep if _n==1
+		bysort `id' `event': gen weight=_N 
+		bysort `id' `event': keep if _n==1 
+		replace weight=1/weight
 
-label var weight "Weight for estimation"
-label var match_pair "New pair id code"
-label var `id' "original ID" 
-label var `event' "original event" 
-label var treated "New treated/control status"
+		label var weight "Weight for estimation"
+		label var match_pair "New pair id code"
+		label var `id' "original ID" 
+		label var `event' "original event" 
+		label var treated "New treated/control status"
 
-saveold "`tempdir'\\final_stacked_matched.dta", replace 
-erase "`tempdir'\\baseline_sample.dta" 
-restore  
+		saveold "`tempdir'\\final_stacked_matched.dta", replace 
+		erase "`tempdir'\\baseline_sample.dta" 
+		restore  
 
-di as red "Matching completed successfully."
-	
-use "`tempdir'\\final_stacked_matched.dta", clear 
-erase "`tempdir'\\final_stacked_matched.dta" 
-exit
+		di as red "Matching completed successfully."
+			
+		use "`tempdir'\\final_stacked_matched.dta", clear 
+		erase "`tempdir'\\final_stacked_matched.dta" 
+		exit
 }	
 
 drop `event'0
