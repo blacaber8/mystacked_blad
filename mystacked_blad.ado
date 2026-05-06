@@ -107,7 +107,7 @@ saveold  "`tempdir'\\baseline_sample.dta", replace
 if "`allstack'"=="" {
 * Matrix for mahalanobis 
 use "`tempdir'/baseline_sample.dta", clear
-keep if `event' == 0
+keep if `event' >= 0
 quietly corr `xvar', covariance
 matrix S = r(C)
 
