@@ -27,8 +27,26 @@ program mystacked_blad, eclass
 
 syntax    [if] [in] , ///
 		  rperiod(integer) event(varname numeric)  xvar(varlist) time(varname numeric) id(varname)  ///
-		  [ force    path_actual  by(varlist)  seed(numlist integer max=1) noyet(numlist integer max=1) allstack onlynoyet ] 
+		  [ force    path_actual  by(varlist)  seed(numlist integer max=1) noyet(numlist integer max=1) allstack onlynoyet neighbors(string)] 
 		 
+local neighbors = strtrim("`neighbors'")
+
+if "`neighbors'" == "" {
+    local select "1"
+}
+
+if lower("`neighbors'") == "all" {
+    local select  "_N" 
+}
+
+if "`neighbors'" != "" & lower("`neighbors'") != "all" &  !regexm("`neighbors'", "^[1-9][0-9]*$")  {
+  di as error "option neighbors() must be an integer >= 1 or all"
+  exit 198
+}
+
+if "`neighbors'" != "" & lower("`neighbors'") != "all" &  regexm("`neighbors'", "^[1-9][0-9]*$")  {
+  local select=`neighbors'
+}
 
 		 
 quietly {
@@ -280,13 +298,15 @@ if r(N)>0 {
 
 * nearest neighbor 
 sort `id'1 `event' maha  `random'
-by `id'1 `event': keep if _n==1 
+by `id'1 `event': keep if _n<=`select' 
 
 keep `id'* `event' 
-gen match_pair=_n 
+gen match_pair=`id'1
+gen idf=_n  
 
-reshape long  `id' , i(match_pair `event')  j(treated)
-
+reshape long  `id' , i(idf match_pair `event')  j(treated)
+drop idf
+bysort match_pair `id' `event': keep if _n==1
 label var match_pair "New pair id code"
 label var `id' "original ID" 
 label var `event' "original event" 
@@ -305,28 +325,3 @@ erase "`tempdir'\\final_stacked_matched.dta"
 describe *
 
 end 
-
-/*
-clear
-set seed 123
-
-* 200 unidades, 10 periodos cada
-set obs 200
-gen id = _n
-expand 20
-bysort id: gen time = _n
-
-* 100 tratadas em diferentes momentos; 100 never-treated
-gen event = 0
-replace event = round(runiform(1, 18)) if id <= 100
-
-* Covariavel continua: renda
-gen renda = 1000 + 50*time + 10*id + rnormal(0,100)
-
-order id time event renda
-sort id time
-
-* Exemplo de uso
-mystacked_blad, rperiod(1) event(event) xvar(renda) time(time) id(id) seed(123) noyet(3) onlynoyet
-
-*/
