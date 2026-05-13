@@ -32,6 +32,7 @@
 {cmd:noyet(}{it:#}{cmd:)}
 {cmd:allstack}
 {cmd:onlynoyet}
+{cmd:neighbors(}{it:#}|{cmd:all}{cmd:)}
 ]
 
 {marker description}{...}
@@ -49,13 +50,19 @@ eligible control using Mahalanobis distance based on the covariates supplied in
 {cmd:event-rperiod}.
 
 {pstd}
+The option {cmd:neighbors()} allows the user to keep more than one nearest
+control for each treated unit and event. The default is {cmd:neighbors(1)}.
+Use {cmd:neighbors(all)} to keep all feasible controls after the Mahalanobis
+distance is computed.
+
+{pstd}
 The command accommodates multiple treatment events because matching is performed
 separately for each event time recorded in the data. If {cmd:by()} is specified,
 eligible controls are restricted to the same group as the treated unit.
 
 {pstd}
 Alternatively, with {cmd:allstack}, the command returns the full stacked set of
-treated-control comparisons instead of selecting a single nearest match.
+treated-control comparisons instead of selecting nearest matches.
 
 {marker options}{...}
 {title:Options}
@@ -87,13 +94,20 @@ the variables in {cmd:by()}. For example, with {cmd:by(region sex)}, treated uni
 are matched only to controls in the same region and sex category.
 
 {phang}
+{cmd:neighbors(}{it:#}|{cmd:all}{cmd:)} specifies how many nearest controls are
+kept for each treated unit and event. The default is {cmd:neighbors(1)}.
+The value must be a positive integer or {cmd:all}. Use {cmd:neighbors(all)}
+to keep all feasible controls after computing Mahalanobis distances.
+This option is ignored when {cmd:allstack} is specified.
+
+{phang}
 {cmd:noyet(}{it:#}{cmd:)} allows not-yet-treated units to be used as controls,
 provided their own event occurs at least {it:#} periods after the treated unit's
 event. Never-treated units remain eligible controls.
 
 {phang}
 {cmd:allstack} returns all eligible treated-control comparisons instead of
-selecting the nearest control by Mahalanobis distance. This option is useful when
+selecting nearest controls by Mahalanobis distance. This option is useful when
 the researcher wants the full stacked comparison sample.
 
 {phang}
@@ -127,6 +141,17 @@ By default, matching is one-to-one and is performed with replacement. A control
 unit can therefore be matched to more than one treated unit or event.
 
 {pstd}
+When {cmd:neighbors()} is greater than one, the command keeps the selected number
+of nearest controls for each treated unit and event. Matching remains with
+replacement.
+
+{pstd}
+When {cmd:neighbors(all)} is specified, the command keeps all feasible controls
+for each treated unit and event after computing Mahalanobis distances. This is
+different from {cmd:allstack}, which skips the nearest-neighbor matching step and
+returns the full stacked set of eligible treated-control comparisons.
+
+{pstd}
 When {cmd:allstack} is specified, the command does not compute nearest-neighbor
 matches. Instead, it creates a stacked dataset containing all eligible treated and
 control observations. In this case, the command also creates a {cmd:weight}
@@ -157,6 +182,18 @@ Nearest-neighbor matching using never-treated controls:
 
 {phang2}
 {cmd:. mystacked_blad, rperiod(1) event(event) xvar(x1 x2) time(time) id(id)}
+
+{pstd}
+Keep the five nearest controls for each treated unit and event:
+
+{phang2}
+{cmd:. mystacked_blad, rperiod(1) event(event) xvar(x1 x2) time(time) id(id) neighbors(5)}
+
+{pstd}
+Keep all feasible controls after Mahalanobis-distance matching setup:
+
+{phang2}
+{cmd:. mystacked_blad, rperiod(1) event(event) xvar(x1 x2) time(time) id(id) neighbors(all)}
 
 {pstd}
 Matching within groups:
